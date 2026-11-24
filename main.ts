@@ -6,9 +6,26 @@
 // handle, "g290" — four characters, a single word, no padding, no gloss —
 // and nothing more. The judge then reads that one word against the other
 // entries, two at a time.
-import { mkdirSync, writeFileSync } from "node:fs";
+//
+// After writing, it reads the file back and checks it against the same
+// gate, so a failed or mangled write fails loudly here instead of
+// silently handing the judge a bad entry.
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 
 const USERNAME = "g290";
+const OUTPUT_PATH = "/output/entry.txt";
 
 mkdirSync("/output", { recursive: true });
-writeFileSync("/output/entry.txt", USERNAME, "utf8");
+writeFileSync(OUTPUT_PATH, USERNAME, "utf8");
+
+// Read back and verify against the gate: 1-30 characters, not only white
+// space, exactly the username we meant to send.
+const written = readFileSync(OUTPUT_PATH, "utf8");
+if (
+  written !== USERNAME ||
+  written.length < 1 ||
+  written.length > 30 ||
+  written.trim().length === 0
+) {
+  throw new Error(`entry failed the gate: wrote ${JSON.stringify(written)}`);
+}
